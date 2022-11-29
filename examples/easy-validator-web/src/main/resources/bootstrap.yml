@@ -1,0 +1,13 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: easy-validator-web
+  profiles:
+    active: dev
+
+logging:
+  file:
+    path: /Users/tangyh/data/logs
+    name: ${logging.file.path}/${spring.application.name}/root.log
+  config: classpath:logback-spring.xml
