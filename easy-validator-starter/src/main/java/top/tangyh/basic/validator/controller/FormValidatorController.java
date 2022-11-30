@@ -1,7 +1,9 @@
 package top.tangyh.basic.validator.controller;
 
 import cn.hutool.core.util.StrUtil;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.server.RequestPath;
 import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,7 +12,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import top.tangyh.basic.validator.extract.IConstraintExtract;
+import org.springframework.web.util.ServletRequestPathUtils;
+import top.tangyh.basic.validator.extract.ConstraintExtract;
 import top.tangyh.basic.validator.model.FieldValidatorDesc;
 import top.tangyh.basic.validator.model.ValidConstraint;
 import top.tangyh.basic.validator.wrapper.HttpServletRequestValidatorWrapper;
@@ -82,11 +85,13 @@ public class FormValidatorController {
 
     private static final String FORM_VALIDATOR_URL = "/form/validator";
     private final RequestMappingHandlerMapping requestMappingHandlerMapping;
-    private final IConstraintExtract constraintExtract;
+    private final ConstraintExtract constraintExtract;
+    private final WebMvcProperties mvcProperties;
 
-    public FormValidatorController(IConstraintExtract constraintExtract, RequestMappingHandlerMapping requestMappingHandlerMapping) {
+    public FormValidatorController(ConstraintExtract constraintExtract, WebMvcProperties mvcProperties, RequestMappingHandlerMapping requestMappingHandlerMapping) {
         this.constraintExtract = constraintExtract;
         this.requestMappingHandlerMapping = requestMappingHandlerMapping;
+        this.mvcProperties = mvcProperties;
     }
 
     /**
@@ -120,7 +125,15 @@ public class FormValidatorController {
     }
 
     private Collection<FieldValidatorDesc> localFieldValidatorDescribe(HttpServletRequest request, String formPath) throws Exception {
-        HandlerExecutionChain chains = requestMappingHandlerMapping.getHandler(new HttpServletRequestValidatorWrapper(request, formPath));
+        HandlerExecutionChain chains;
+        if (this.mvcProperties.getPathmatch()
+                .getMatchingStrategy() == WebMvcProperties.MatchingStrategy.PATH_PATTERN_PARSER) {
+            RequestPath requestPath = RequestPath.parse(formPath, request.getContextPath());
+            ServletRequestPathUtils.setParsedRequestPath(requestPath, request);
+            chains = requestMappingHandlerMapping.getHandler(request);
+        } else {
+            chains = requestMappingHandlerMapping.getHandler(new HttpServletRequestValidatorWrapper(request, formPath));
+        }
         if (chains == null) {
             return Collections.emptyList();
         }

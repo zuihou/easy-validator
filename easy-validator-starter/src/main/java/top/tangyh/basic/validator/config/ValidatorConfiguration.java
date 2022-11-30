@@ -11,7 +11,7 @@ import org.hibernate.validator.internal.properties.javabean.JavaBeanHelper;
 import org.hibernate.validator.spi.nodenameprovider.PropertyNodeNameProvider;
 import org.hibernate.validator.spi.properties.GetterPropertySelectionStrategy;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
@@ -19,8 +19,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import top.tangyh.basic.validator.annotation.NotEmptyPattern;
 import top.tangyh.basic.validator.constraintvalidators.NotEmptyPatternConstraintValidator;
 import top.tangyh.basic.validator.controller.FormValidatorController;
+import top.tangyh.basic.validator.extract.ConstraintExtract;
 import top.tangyh.basic.validator.extract.DefaultConstraintExtractImpl;
-import top.tangyh.basic.validator.extract.IConstraintExtract;
 import top.tangyh.basic.validator.properties.ValidatorProperties;
 
 import javax.validation.Configuration;
@@ -30,11 +30,13 @@ import javax.validation.ValidatorFactory;
 
 /**
  * 验证器配置
+ * <p>
+ * 标记 EnableFormValidator 注解后， org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration 中的配置将会被覆盖，
+ * 若无法覆盖 org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration 中的配置，本组件会报错！
  *
  * @author zuihou
  * @date 2019/07/14
  */
-@ConditionalOnProperty(prefix = ValidatorProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(ValidatorProperties.class)
 public class ValidatorConfiguration {
     private final ValidatorProperties validatorProperties;
@@ -44,7 +46,6 @@ public class ValidatorConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
     public Validator validator() {
         HibernateValidatorConfiguration hibernateValidatorConfiguration = Validation.byProvider(HibernateValidator.class).configure()
                 //快速失败返回模式
@@ -68,30 +69,38 @@ public class ValidatorConfiguration {
     }
 
     /**
-     * 开启快速返回
+     * 开启方法级验证
      * <p>
      * 如果参数校验有异常，直接抛异常，不会进入到 controller，使用全局异常拦截进行拦截
      *
      * @param validator 验证器
      */
     @Bean
-    @ConditionalOnMissingBean
     public MethodValidationPostProcessor methodValidationPostProcessor(Validator validator) {
         MethodValidationPostProcessor postProcessor = new MethodValidationPostProcessor();
         postProcessor.setValidator(validator);
         return postProcessor;
     }
 
+    /**
+     * 表单校验规则 提取类
+     *
+     * @param validator 全局验证器
+     * @return top.tangyh.basic.validator.extract.ConstraintExtract
+     * @author tangyh
+     * @date 2022/11/29 8:55 PM
+     * @create [2022/11/29 8:55 PM ] [tangyh] [初始创建]
+     */
     @Bean
-    @ConditionalOnMissingBean
-    public IConstraintExtract constraintExtract(Validator validator) {
+    public ConstraintExtract constraintExtract(Validator validator) {
         return new DefaultConstraintExtractImpl(validator);
     }
 
+    /** 获取指定接口验证规则的Controller */
     @Bean
     @ConditionalOnMissingBean
-    public FormValidatorController getFormValidatorController(IConstraintExtract constraintExtract, RequestMappingHandlerMapping requestMappingHandlerMapping) {
-        return new FormValidatorController(constraintExtract, requestMappingHandlerMapping);
+    public FormValidatorController getFormValidatorController(ConstraintExtract constraintExtract, WebMvcProperties mvcProperties, RequestMappingHandlerMapping requestMappingHandlerMapping) {
+        return new FormValidatorController(constraintExtract, mvcProperties, requestMappingHandlerMapping);
     }
 
 }

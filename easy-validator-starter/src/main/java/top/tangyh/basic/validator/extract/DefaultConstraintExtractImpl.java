@@ -9,6 +9,7 @@ import org.hibernate.validator.internal.metadata.core.MetaConstraint;
 import org.hibernate.validator.internal.metadata.location.ConstraintLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import top.tangyh.basic.validator.mateconstraint.IConstraintConverter;
 import top.tangyh.basic.validator.mateconstraint.impl.MaxMinConstraintConverter;
 import top.tangyh.basic.validator.mateconstraint.impl.NotNullConstraintConverter;
@@ -62,24 +63,26 @@ import static top.tangyh.basic.validator.utils.ValidatorConstants.TIME;
  * @author zuihou
  * @date 2019-07-14 12:12
  */
-public class DefaultConstraintExtractImpl implements IConstraintExtract {
+public class DefaultConstraintExtractImpl implements ConstraintExtract {
     private static final Logger log = LoggerFactory.getLogger(DefaultConstraintExtractImpl.class);
     private final Map<String, Map<String, FieldValidatorDesc>> CACHE = new HashMap<>();
 
-    private final Validator validator;
     private BeanMetaDataManager beanMetaDataManager;
     private List<IConstraintConverter> constraintConverters;
 
     public DefaultConstraintExtractImpl(final Validator validator) {
-        this.validator = validator;
-        init();
+        init(validator);
     }
 
-    public final void init() {
+    public final void init(Validator validator) {
         try {
             Field beanMetaDataManagerField = ValidatorImpl.class.getDeclaredField("beanMetaDataManager");
             beanMetaDataManagerField.setAccessible(true);
-            beanMetaDataManager = (BeanMetaDataManager) beanMetaDataManagerField.get(validator);
+            if (validator instanceof LocalValidatorFactoryBean) {
+                beanMetaDataManager = (BeanMetaDataManager) beanMetaDataManagerField.get(((LocalValidatorFactoryBean) validator).getValidator());
+            } else {
+                beanMetaDataManager = (BeanMetaDataManager) beanMetaDataManagerField.get(validator);
+            }
             constraintConverters = new ArrayList<>(10);
             constraintConverters.add(new MaxMinConstraintConverter());
             constraintConverters.add(new NotNullConstraintConverter());
@@ -115,9 +118,6 @@ public class DefaultConstraintExtractImpl implements IConstraintExtract {
             fieldValidatorDesc.putAll(CACHE.get(key));
             return;
         }
-
-        //测试一下这个方法
-        //validator.getConstraintsForClass(targetClazz).getConstrainedProperties()
 
         BeanMetaData<?> res = beanMetaDataManager.getBeanMetaData(targetClazz);
         Set<MetaConstraint<?>> r = res.getMetaConstraints();

@@ -11,8 +11,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = ValidatorProperties.PREFIX)
 public class ValidatorProperties {
     public static final String PREFIX = "easy-validator";
-    private Boolean enabled;
-    private Boolean failFast;
+    private Boolean enabled = true;
+    private Boolean failFast = true;
 
 
     public Boolean getEnabled() {

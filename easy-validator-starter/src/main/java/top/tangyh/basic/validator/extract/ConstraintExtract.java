@@ -8,12 +8,12 @@ import java.util.List;
 
 
 /**
- * 提取指定表单验证规则
+ * 提取指定表单校验规则
  *
  * @author zuihou
  * @date 2019-06-12
  */
-public interface IConstraintExtract {
+public interface ConstraintExtract {
 
     /**
      * 提取指定表单验证规则

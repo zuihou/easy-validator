@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-    top.tangyh.basic.validator.config.ValidatorConfiguration
