@@ -1,0 +1,5 @@
+#spring:
+#  mvc:
+#    pathmatch:
+#      # 这个配置放在 bootstrap.yml 中不生效
+#      matching-strategy: ANT_PATH_MATCHER

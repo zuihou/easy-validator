@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import top.tangyh.basic.validator.annotation.EnableFormValidator;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -20,6 +21,7 @@ import java.net.UnknownHostException;
 @SpringBootApplication
 @Configuration
 @Slf4j
+@EnableFormValidator
 public class BaseServerApplication {
     public static void main(String[] args) throws UnknownHostException {
         ConfigurableApplicationContext application = SpringApplication.run(BaseServerApplication.class, args);
