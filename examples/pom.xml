@@ -32,9 +32,10 @@
             <artifactId>easy-validator-starter</artifactId>
             <version>${easy-validator.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-context</artifactId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
             <version>3.1.5</version>
         </dependency>
 
